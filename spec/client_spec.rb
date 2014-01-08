@@ -11,6 +11,7 @@ describe Authentication::Client do
   it 'can register a new user' do
     success = @client.register(@user[:email], @user[:password])
     expect(success).to be true
+    expect(@client.session.length).to be 'E6UNi3NmLdGGzsp2JaGQ'.length
   end
 
   it 'can login as that user' do

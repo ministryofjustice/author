@@ -12,6 +12,7 @@ module Authentication
       response = HTTParty.post("#{@base_url}/auth/users", body: { user: { email: email, password: password } })
       if response.code == 201
         @errors = {}
+        @session = JSON.parse(response.body)['authentication_token']
       else
         @errors = parse_errors response
       end
