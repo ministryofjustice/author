@@ -1,4 +1,4 @@
-require_relative '../client.rb'
+require_relative '../lib/authentication.rb'
 
 Email = "#{Time.now.to_i}@example.com"
 

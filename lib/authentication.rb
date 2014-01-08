@@ -1,0 +1,1 @@
+Dir.glob(File.join(File.dirname(__FILE__), 'authentication', '*')).each { |file| require file }
