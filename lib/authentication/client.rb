@@ -22,7 +22,7 @@ module Authentication
       response = HTTParty.post("#{@base_url}/auth/sessions", body: { user: { email: email, password: password } })
       if response.code == 201
         extract_session_key response 
-      elsif response.code == 500
+      else
         handle_errors response
       end
       response.code == 201
@@ -55,7 +55,7 @@ module Authentication
     end
 
     def extract_user_details(response)
-      if response.headers.has_key? 'x-user-id'
+      if (response.headers.to_s != '' && response.headers.has_key?('x-user-id'))
         @user_id = response.headers['x-user-id']
       else
         raise ServerError, 'Missing x-user-id header in auth server response'
@@ -63,7 +63,7 @@ module Authentication
     end
 
     def extract_session_key(response)
-      if response.has_key? 'authentication_token'
+      if (response.body.to_s != '' && response.has_key?('authentication_token'))
         @session = response['authentication_token']
       else
         raise ServerError, "Missing Authentication Token in auth server response."
@@ -71,18 +71,21 @@ module Authentication
     end
 
     def handle_errors(response)
+      errors = (response.body.to_s != '' && response.has_key?('errors')) ? response['errors'] : {}
+          
       case response.code
       when 401
-        raise AuthorisationRequired
+        raise AuthorisationRequiredError
       when 500
         raise ServerError
       when 422
-        errors = response['errors']
         if errors.has_key? 'email'
           raise InvalidEmailError, errors[:email]
         elsif errors.has_key? 'password'
           raise InvalidPasswordError, errors[:password]
         end
+        raise AuthenticationError, 'Unknown error!'
+      else
         raise AuthenticationError, 'Unknown error!'
       end
     end
