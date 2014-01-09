@@ -10,14 +10,8 @@ module Authentication
 
     def register(email, password)
       response = HTTParty.post("#{@base_url}/auth/users", body: { user: { email: email, password: password } })
-      if response.code == 500
-        raise ServerError, "Server error."
-      elsif response.code == 201
-        if response.has_key? 'authentication_token'
-          @session = response['authentication_token']
-        else
-          raise ServerError, "Missing Authentication Token in auth server response."
-        end
+      if response.code == 201
+        extract_session_key response 
       else
         handle_errors response
       end
@@ -27,7 +21,7 @@ module Authentication
     def login(email, password)
       response = HTTParty.post("#{@base_url}/auth/sessions", body: { user: { email: email, password: password } })
       if response.code == 201
-        @session = response['authentication_token']
+        extract_session_key response 
       else
         handle_errors response
       end
@@ -37,7 +31,9 @@ module Authentication
     def verify(session_id)
       response = HTTParty.get("#{@base_url}/auth/users/#{session_id}")
       if response.code == 200
-        @user_id = response.headers['x-user-id']
+        extract_user_details response
+      else
+        handle_errors response
       end
       response.code == 200
     end
@@ -45,14 +41,40 @@ module Authentication
     def logout(session_id)
       response = HTTParty.delete("#{@base_url}/auth/sessions/#{session_id}")
       if response.code == 204
-        remove_instance_variable :@user_id if defined? @user_id
-        remove_instance_variable :@session if defined? @session
+        delete_instance_vars
+      else
+        handle_errors response
       end
       response.code == 204
     end
 
   private
+    def delete_instance_vars
+      remove_instance_variable :@user_id if defined? @user_id
+      remove_instance_variable :@session if defined? @session
+    end
+
+    def extract_user_details(response)
+      if response.headers.has_key? 'x-user-id'
+        @user_id = response.headers['x-user-id']
+      else
+        raise ServerError, 'Missing x-user-id header in auth server response'
+      end
+    end
+
+    def extract_session_key(response)
+      if response.has_key? 'authentication_token'
+        @session = response['authentication_token']
+      else
+        raise ServerError, "Missing Authentication Token in auth server response."
+      end
+    end
+
     def handle_errors(response)
+      if response.code == 401
+        raise AuthorisationRequired
+      end
+      
       errors = JSON.parse response.body
       if errors.has_key? 'email'
         raise InvalidEmailError, "Email address is invalid."
@@ -62,6 +84,8 @@ module Authentication
         else
           raise StandardError, "Unknown problem with password."
         end
+      elsif response.code == 500
+        raise ServerError, "Server error."
       end
     end
   end

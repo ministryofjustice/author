@@ -32,6 +32,6 @@ describe Authentication::Client do
     session = @client.session
     success = @client.logout session
     expect(success).to be true
-    expect(@client.verify session).to be false
+    expect { @client.verify session }.to raise_error Authentication::AuthorisationRequired
   end
 end
