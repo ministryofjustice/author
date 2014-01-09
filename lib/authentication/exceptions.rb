@@ -1,7 +1,9 @@
 module Authentication
-  class InvalidEmailError < StandardError; end
-  class BlankPasswordError < StandardError; end
-  class LoginFailed < StandardError; end
-  class AuthorisationRequired < StandardError; end
-  class ServerError < StandardError; end
+  class AuthenticationError < StandardError; end
+
+  class InvalidEmailError     < AuthenticationError; end
+  class InvalidPasswordError  < AuthenticationError; end
+  class LoginFailed           < AuthenticationError; end
+  class AuthorisationRequired < AuthenticationError; end
+  class ServerError           < AuthenticationError; end
 end
