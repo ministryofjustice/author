@@ -1,5 +1,5 @@
 # -*- encoding: utf-8 -*-
-require './lib/authentication.rb'
+require './lib/ruby_authentication_client.rb'
 
 Gem::Specification.new do |gem|
   gem.name          = "ruby_authentication_client"

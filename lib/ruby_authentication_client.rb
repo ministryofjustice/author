@@ -1,0 +1,1 @@
+Dir.glob(File.join(File.dirname(__FILE__), 'ruby_authentication_client', '*')).each { |file| require file }

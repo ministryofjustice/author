@@ -1,4 +1,4 @@
-require_relative '../lib/authentication.rb'
+require_relative '../lib/ruby_authentication_client.rb'
 
 require 'SecureRandom'
 
