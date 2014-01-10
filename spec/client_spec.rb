@@ -1,8 +1,8 @@
-require_relative '../lib/ruby_authentication_client.rb'
+require_relative '../lib/author.rb'
 
 require 'SecureRandom'
 
-client = Authentication::Client.new('localhost', '3111')
+client = Author::Client.new('localhost', '3111')
 
 # TODO: mock service calls
 begin
@@ -12,9 +12,9 @@ rescue
   exit(1)
 end
 
-describe Authentication::Proxy do
+describe Author::Proxy do
   before :each do
-    @auth = Authentication::Proxy.new(client)
+    @auth = Author::Proxy.new(client)
   end
 
   def session_token_length
@@ -37,11 +37,11 @@ describe Authentication::Proxy do
     end
 
     it 'throws InvalidEmailError' do
-      expect { @auth.register('', new_user[:password]) }.to raise_error Authentication::InvalidEmailError
+      expect { @auth.register('', new_user[:password]) }.to raise_error Author::InvalidEmailError
     end
 
     it 'throws InvalidPasswordError' do
-      expect { @auth.register(new_user[:email], '') }.to raise_error Authentication::InvalidPasswordError
+      expect { @auth.register(new_user[:email], '') }.to raise_error Author::InvalidPasswordError
     end
   end
 
@@ -56,15 +56,15 @@ describe Authentication::Proxy do
     end
 
     it 'throws AuthorisationRequiredError with blank details' do
-      expect { @auth.login('', '') }.to raise_error Authentication::AuthorisationRequiredError
+      expect { @auth.login('', '') }.to raise_error Author::AuthorisationRequiredError
     end
 
     it 'throws AuthorisationRequiredError with incorrect email' do
-      expect { @auth.login('', @user[:password]) }.to raise_error Authentication::AuthorisationRequiredError
+      expect { @auth.login('', @user[:password]) }.to raise_error Author::AuthorisationRequiredError
     end
 
     it 'throws AuthorisationRequiredError with incorrect password' do
-      expect { @auth.login(@user[:email], '') }.to raise_error Authentication::AuthorisationRequiredError
+      expect { @auth.login(@user[:email], '') }.to raise_error Author::AuthorisationRequiredError
     end
   end
 
@@ -79,7 +79,7 @@ describe Authentication::Proxy do
     end
 
     it 'throws AuthorisationRequiredError on invalid session token' do
-      expect { @auth.verify('invalid_token') }.to raise_error Authentication::AuthorisationRequiredError
+      expect { @auth.verify('invalid_token') }.to raise_error Author::AuthorisationRequiredError
     end
   end
 
@@ -91,11 +91,11 @@ describe Authentication::Proxy do
     it 'valid session token' do
       session = @auth.session
       expect(@auth.logout session).to be true
-      expect { @auth.verify session }.to raise_error Authentication::AuthorisationRequiredError
+      expect { @auth.verify session }.to raise_error Author::AuthorisationRequiredError
     end
 
     it 'throws AuthorisationRequiredError on invalid session token' do
-      expect{ @auth.logout 'not_a_session' }.to raise_error Authentication::AuthorisationRequiredError
+      expect{ @auth.logout 'not_a_session' }.to raise_error Author::AuthorisationRequiredError
     end
   end
 end

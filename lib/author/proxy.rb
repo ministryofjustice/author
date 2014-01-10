@@ -1,4 +1,4 @@
-module Authentication
+module Author
   class Proxy
     attr_accessor :session, :user_id
 
@@ -64,7 +64,6 @@ module Authentication
       if (response.body.to_s != '' && response.has_key?('authentication_token'))
         @session = response['authentication_token']
       else
-
         raise ServerError, "Missing Authentication Token in auth server response."
       end
     end

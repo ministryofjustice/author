@@ -1,6 +1,6 @@
 require 'httparty'
 
-module Authentication
+module Author
   class Client
     def initialize(host, port)
       @host = host

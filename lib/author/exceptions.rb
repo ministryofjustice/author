@@ -1,4 +1,4 @@
-module Authentication
+module Author
   class AuthenticationError < StandardError; end
 
   class InvalidEmailError           < AuthenticationError; end

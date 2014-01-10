@@ -1,8 +1,8 @@
 # -*- encoding: utf-8 -*-
-require './lib/ruby_authentication_client.rb'
+require './lib/author.rb'
 
 Gem::Specification.new do |gem|
-  gem.name          = "ruby_authentication_client"
+  gem.name          = "author"
   gem.version       = 1.0
   gem.authors       = ["Tom Gladhill"]
   gem.email         = ["whoojemaflip@gmail.com"]
