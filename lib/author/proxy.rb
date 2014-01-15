@@ -9,7 +9,7 @@ module Author
     def register(email, password)
       response = @client.register(email, password)
       if response.code == 201
-        extract_session_key response 
+        extract_session_key response
       else
         handle_errors response
       end
@@ -19,7 +19,7 @@ module Author
     def login(email, password)
       response = @client.login(email, password)
       if response.code == 201
-        extract_session_key response 
+        extract_session_key response
       else
         handle_errors response
       end
@@ -70,7 +70,7 @@ module Author
 
     def handle_errors(response)
       errors = (response.body.to_s != '' && response.has_key?('errors')) ? response['errors'] : {}
-          
+
       case response.code
       when 401
         raise AuthorisationRequiredError
