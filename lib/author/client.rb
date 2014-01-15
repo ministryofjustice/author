@@ -1,5 +1,3 @@
-require 'httparty'
-
 module Author
   class Client
     def initialize(uri)
