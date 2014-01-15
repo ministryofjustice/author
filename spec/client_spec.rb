@@ -13,89 +13,212 @@ rescue
 end
 
 describe Author::Proxy do
-  before :each do
-    @auth = Author::Proxy.new(client)
-  end
+  let(:valid_user) { { email: "#{SecureRandom.uuid}@example.com", password: 'Password1' } }
 
-  def session_token_length
-    20
-  end
-
-  def new_user
-    {email: "#{SecureRandom.uuid}@example.com", password: 'Password1'}
-  end
-
-  def register_new_account
-    @user = new_user
-    @auth.register(@user[:email], @user[:password])
-  end
-
-  context "register" do
-    it 'new user' do
-      expect(register_new_account).to be true
-      expect(@auth.session.length).to be session_token_length
-    end
-
-    it 'throws InvalidEmailError' do
-      expect { @auth.register('', new_user[:password]) }.to raise_error Author::InvalidEmailError
-    end
-
-    it 'throws InvalidPasswordError' do
-      expect { @auth.register(new_user[:email], '') }.to raise_error Author::InvalidPasswordError
-    end
-  end
-
-  context "login" do
+  context ".register" do
     before :each do
-      register_new_account
+      @auth = Author::Proxy.new(client)
+      @result = @auth.register(email, password)
     end
 
-    it 'valid credentials' do
-      expect(@auth.login(@user[:email], @user[:password])).to be true
-      expect(@auth.session.length).to be session_token_length
+    describe 'with valid credentials' do
+      let(:email) { valid_user[:email] }
+      let(:password) { valid_user[:password] }
+
+      it 'should return true' do
+        expect(@result).to be_true
+      end
+      context '.session' do
+        it { @auth.session.should_not be_nil }
+      end
+      context '.errors' do
+        it { @auth.errors.should be_empty }
+      end
     end
 
-    it 'throws AuthorisationRequiredError with blank details' do
-      expect { @auth.login('', '') }.to raise_error Author::AuthorisationRequiredError
+    describe 'with invalid email' do
+      let(:email) { 'xxx' }
+      let(:password) { valid_user[:password] }
+
+      it 'should return false' do
+        expect(@result).to be_false
+      end
+      context '.session' do
+        it { @auth.session.should be_nil }
+      end
+      context '.errors["email"]' do
+        it { @auth.errors['email'].should_not be_empty }
+      end
     end
 
-    it 'throws AuthorisationRequiredError with incorrect email' do
-      expect { @auth.login('', @user[:password]) }.to raise_error Author::AuthorisationRequiredError
-    end
+    describe 'with invalid password' do
+      let(:email) { valid_user[:email] }
+      let(:password) { 'xxx' }
 
-    it 'throws AuthorisationRequiredError with incorrect password' do
-      expect { @auth.login(@user[:email], '') }.to raise_error Author::AuthorisationRequiredError
+      it 'should return false' do
+        expect(@result).to be_false
+      end
+      context '.session' do
+        it { @auth.session.should be_nil }
+      end
+      context '.errors["password"]' do
+        it { @auth.errors['password'].should_not be_empty }
+      end
     end
   end
 
-  context "verify" do
+  context ".login" do
     before :each do
-      register_new_account
+      @auth = Author::Proxy.new(client)
+      @auth.register(email, password)
+      @result = @auth.login(email, password)
     end
 
-    it 'valid session token' do
-      expect(@auth.verify(@auth.session)).to be true
-      expect(@auth.user_id).to eql @user[:email]
+    describe 'with valid credentials' do
+      let(:email) { valid_user[:email] }
+      let(:password) { valid_user[:password] }
+
+      it 'should return true' do
+        expect(@result).to be_true
+      end
+      context '.session' do
+        it { @auth.session.should_not be_nil }
+      end
+      context '.errors' do
+        it { @auth.errors.should be_empty }
+      end
     end
 
-    it 'throws AuthorisationRequiredError on invalid session token' do
-      expect { @auth.verify('invalid_token') }.to raise_error Author::AuthorisationRequiredError
+    describe 'with blank credentials' do
+      let(:email) { '' }
+      let(:password) { '' }
+
+      it 'should return false' do
+        expect(@result).to be_false
+      end
+      context '.session' do
+        it { @auth.session.should be_nil }
+      end
+      context '.errors' do
+        it { @auth.errors.should_not include %w(email password) }
+        context '["messages"]' do
+          it { @auth.errors['messages'].should_not be_empty }
+        end
+      end
+    end
+
+    describe 'with blank email' do
+      let(:email) { '' }
+      let(:password) { 'xxx' }
+
+      it 'should return false' do
+        expect(@result).to be_false
+      end
+      context '.session' do
+        it { @auth.session.should be_nil }
+      end
+      context '.errors' do
+        it { @auth.errors.should_not include %w(email password) }
+        context '["messages"]' do
+          it { @auth.errors['messages'].should_not be_empty }
+        end
+      end
+    end
+
+    describe 'with incorrect email' do
+      let(:email) { 'xxx' }
+      let(:password) { 'xxx' }
+
+      it 'should return false' do
+        expect(@result).to be_false
+      end
+      context '.session' do
+        it { @auth.session.should be_nil }
+      end
+      context '.errors' do
+        it { @auth.errors.should_not include %w(email password) }
+        context '["messages"]' do
+          it { @auth.errors['messages'].should_not be_empty }
+        end
+      end
+    end
+
+    describe 'with incorrect password' do
+      let(:email) { valid_user[:email] }
+      let(:password) { 'xxx' }
+
+      it 'should return false' do
+        expect(@result).to be_false
+      end
+      context '.session' do
+        it { @auth.session.should be_nil }
+      end
+      context '.errors' do
+        it { @auth.errors.should_not include %w(email password) }
+        context '["messages"]' do
+          it { @auth.errors['messages'].should_not be_empty }
+        end
+      end
+    end
+
+  end
+
+  context ".verify" do
+    before :each do
+      @auth = Author::Proxy.new(client)
+      @auth.register(email, password)
+      @result = @auth.verify(session_token)
+    end
+
+    let(:email) { valid_user[:email] }
+    let(:password) { valid_user[:password] }
+
+    context 'with valid session token' do
+      let(:session_token) { @auth.session }
+
+      it 'should return true' do
+        expect(@result).to be_true
+      end
+      context '.user_id' do
+        it 'returns currently logged in user\'s id' do
+          expect(@auth.user_id).to eql email
+        end
+      end
+    end
+
+    context 'with incorrect session token' do
+      let(:session_token) { 'xxx' }
+
+      it 'should return false' do
+        expect(@result).to be_false
+      end
+      context '.user_id' do
+        it { @auth.user_id.should be_nil }
+      end 
     end
   end
 
-  context "logout" do
+  context ".logout" do
     before :each do
-      register_new_account
+      @auth = Author::Proxy.new(client)
+      @auth.register(valid_user[:email], valid_user[:password])
     end
 
-    it 'valid session token' do
-      session = @auth.session
-      expect(@auth.logout session).to be true
-      expect { @auth.verify session }.to raise_error Author::AuthorisationRequiredError
+    context 'with valid session token' do
+      let(:session_token) { @auth.session }
+
+      it 'should return true' do
+        expect(@auth.logout session_token).to be true
+        expect(@auth.verify session_token).to be_false
+      end
     end
 
-    it 'throws AuthorisationRequiredError on invalid session token' do
-      expect{ @auth.logout 'not_a_session' }.to raise_error Author::AuthorisationRequiredError
+    context 'with invalid session token' do
+      let(:session_token) { 'xxx' }
+
+      it 'should return false' do
+        expect(@auth.logout session_token).to be false
+      end
     end
   end
 end

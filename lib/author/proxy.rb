@@ -1,9 +1,12 @@
 module Author
+  class UnexpectedAuthServerResponse < StandardError; end
+
   class Proxy
-    attr_accessor :session, :user_id
+    attr_accessor :session, :user_id, :errors
 
     def initialize(client)
       @client = client
+      @errors = {}
     end
 
     def register(email, password)
@@ -56,7 +59,7 @@ module Author
       if (response.headers.to_s != '' && response.headers.has_key?('x-user-id'))
         @user_id = response.headers['x-user-id']
       else
-        raise ServerError, 'Missing x-user-id header in auth server response'
+        raise UnexpectedAuthServerResponse, 'Missing User ID.'
       end
     end
 
@@ -64,27 +67,18 @@ module Author
       if (response.body.to_s != '' && response.has_key?('authentication_token'))
         @session = response['authentication_token']
       else
-        raise ServerError, "Missing Authentication Token in auth server response."
+        raise UnexpectedAuthServerResponse, "Missing Session Token."
       end
     end
 
     def handle_errors(response)
-      errors = (response.body.to_s != '' && response.has_key?('errors')) ? response['errors'] : {}
-          
-      case response.code
-      when 401
-        raise AuthorisationRequiredError
-      when 500
-        raise ServerError
-      when 422
-        if errors.has_key? 'email'
-          raise InvalidEmailError, errors[:email]
-        elsif errors.has_key? 'password'
-          raise InvalidPasswordError, errors[:password]
+      if response.body.to_s != ''
+        if response.has_key?('errors')
+          @errors = response['errors']
+        elsif response.has_key?('error')
+          @errors['messages'] ||= []
+          @errors['messages'] << response['error']
         end
-        raise AuthenticationError, 'Unknown error!'
-      else
-        raise AuthenticationError, 'Unknown error!'
       end
     end
   end
