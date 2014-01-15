@@ -2,7 +2,7 @@ require_relative '../lib/author.rb'
 
 require 'SecureRandom'
 
-client = Author::Client.new('localhost', '3111')
+client = Author::Client.new('http://localhost:9292')
 
 # TODO: mock service calls
 begin

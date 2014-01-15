@@ -12,7 +12,7 @@ module Author
     def register(email, password)
       response = @client.register(email, password)
       if response.code == 201
-        extract_session_key response 
+        extract_session_key response
       else
         handle_errors response
       end
@@ -22,7 +22,7 @@ module Author
     def login(email, password)
       response = @client.login(email, password)
       if response.code == 201
-        extract_session_key response 
+        extract_session_key response
       else
         handle_errors response
       end
@@ -72,12 +72,27 @@ module Author
     end
 
     def handle_errors(response)
+<<<<<<< HEAD
       if response.body.to_s != ''
         if response.has_key?('errors')
           @errors = response['errors']
         elsif response.has_key?('error')
           @errors['messages'] ||= []
           @errors['messages'] << response['error']
+=======
+      errors = (response.body.to_s != '' && response.has_key?('errors')) ? response['errors'] : {}
+
+      case response.code
+      when 401
+        raise AuthorisationRequiredError
+      when 500
+        raise ServerError
+      when 422
+        if errors.has_key? 'email'
+          raise InvalidEmailError, errors[:email]
+        elsif errors.has_key? 'password'
+          raise InvalidPasswordError, errors[:password]
+>>>>>>> master
         end
       end
     end
