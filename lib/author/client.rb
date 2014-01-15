@@ -2,9 +2,11 @@ require 'httparty'
 
 module Author
   class Client
-    def initialize(host, port)
-      @host = host
-      @port = port.to_i
+    def initialize(uri)
+      uri = URI.parse(uri)
+      @scheme = uri.scheme
+      @host = uri.host
+      @port = uri.port.to_i
     end
 
     def to_s
@@ -41,7 +43,7 @@ module Author
     end
 
     def url(path='')
-      URI::HTTP.build(host: @host, port: @port, path: path).to_s
+      URI::HTTP.build(scheme: @scheme, host: @host, port: @port, path: path).to_s
     end
   end
 end
