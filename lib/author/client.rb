@@ -16,7 +16,7 @@ module Author
     end
 
     def confirm_registration(confirmation_token)
-      post url("/auth/users/confirmation/#{confirmation_token}")
+      post url("/auth/users/confirmation/#{confirmation_token}"), {}
     end
 
     def login(email, password)
