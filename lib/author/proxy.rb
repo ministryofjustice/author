@@ -2,7 +2,7 @@ module Author
   class UnexpectedAuthServerResponse < StandardError; end
 
   class Proxy
-    attr_accessor :session, :user_id, :errors
+    attr_accessor :session, :user_id, :errors, :confirmation_token
 
     def initialize(client)
       @client = client
@@ -12,11 +12,15 @@ module Author
     def register(email, password)
       response = @client.register(email, password)
       if response.code == 201
-        extract_session_key response
+        extract_confirmation_token response
       else
         handle_errors response
       end
       response.code == 201
+    end
+
+    def confirm_registration confirmation_token
+      @client.confirm_registration confirmation_token
     end
 
     def login(email, password)
@@ -60,6 +64,14 @@ module Author
         @user_id = response.headers['x-user-id']
       else
         raise UnexpectedAuthServerResponse, 'Missing User ID.'
+      end
+    end
+
+    def extract_confirmation_token(response)
+      if (response.body.to_s != '' && response.has_key?('confirmation_token'))
+        @confirmation_token = response['confirmation_token']
+      else
+        raise UnexpectedAuthServerResponse, "Missing Confirmation Token."
       end
     end
 

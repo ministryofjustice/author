@@ -1,3 +1,9 @@
+begin
+  require 'httparty'
+rescue Exception => e
+  puts e.to_s
+end
+
 module Author
   class Client
     def initialize(uri)
