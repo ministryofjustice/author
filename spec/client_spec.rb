@@ -7,8 +7,8 @@ client = Author::Client.new('http://localhost:9292')
 # TODO: mock service calls
 begin
   client.verify('xxx')
-rescue
-  puts "FAIL: expected to find authentication service on #{client}"
+rescue Exception => e
+  puts "FAIL: expected to find authentication service on #{client}: #{e.to_s}"
   exit(1)
 end
 
@@ -29,7 +29,10 @@ describe Author::Proxy do
         expect(@result).to be_true
       end
       context '.session' do
-        it { @auth.session.should_not be_nil }
+        it { @auth.session.should be_nil }
+      end
+      context '.confirmation_token' do
+        it { @auth.confirmation_token.should_not be_nil }
       end
       context '.errors' do
         it { @auth.errors.should be_empty }
@@ -45,6 +48,9 @@ describe Author::Proxy do
       end
       context '.session' do
         it { @auth.session.should be_nil }
+      end
+      context '.confirmation_token' do
+        it { @auth.confirmation_token.should be_nil }
       end
       context '.errors["email"]' do
         it { @auth.errors['email'].should_not be_empty }
@@ -71,6 +77,7 @@ describe Author::Proxy do
     before :each do
       @auth = Author::Proxy.new(client)
       @auth.register(email, password)
+      @auth.confirm_registration(@auth.confirmation_token)
       @result = @auth.login(email, password)
     end
 
@@ -167,6 +174,8 @@ describe Author::Proxy do
     before :each do
       @auth = Author::Proxy.new(client)
       @auth.register(email, password)
+      @auth.confirm_registration(@auth.confirmation_token)
+      @auth.login(email, password)
       @result = @auth.verify(session_token)
     end
 
@@ -194,14 +203,18 @@ describe Author::Proxy do
       end
       context '.user_id' do
         it { @auth.user_id.should be_nil }
-      end 
+      end
     end
   end
 
   context ".logout" do
     before :each do
       @auth = Author::Proxy.new(client)
-      @auth.register(valid_user[:email], valid_user[:password])
+      email = valid_user[:email]
+      password = valid_user[:password]
+      @auth.register(email, password)
+      @auth.confirm_registration(@auth.confirmation_token)
+      @auth.login(email, password)
     end
 
     context 'with valid session token' do

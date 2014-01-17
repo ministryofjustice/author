@@ -1,3 +1,9 @@
+begin
+  require 'httparty'
+rescue Exception => e
+  puts e.to_s
+end
+
 module Author
   class Client
     def initialize(uri)
@@ -15,12 +21,16 @@ module Author
       post url('/auth/users'), user: { email: email, password: password }
     end
 
+    def confirm_registration(confirmation_token)
+      post url("/auth/users/confirmation/#{confirmation_token}"), {}
+    end
+
     def login(email, password)
       post url('/auth/sessions'), user: { email: email, password: password }
     end
 
-    def verify(session)
-      get url("/auth/users/#{session}")
+    def verify(authentication_token)
+      get url("/auth/users/#{authentication_token}")
     end
 
     def logout(session)
