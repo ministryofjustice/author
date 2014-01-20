@@ -75,6 +75,58 @@ describe Author::Proxy do
     end
   end
 
+  context ".confirm_registration" do
+    before :each do
+      @auth = Author::Proxy.new(client)
+      @auth.register(email, password)
+      @result = @auth.confirm_registration(@auth.confirmation_token)
+    end    
+
+    let(:email) { valid_user[:email] }
+    let(:password) { valid_user[:password] }
+
+    describe 'with valid confirmation_token' do
+      it 'should return true' do
+        expect(@result).to be_true
+      end
+    end
+  end
+
+  context ".register_and_login" do
+    before :each do
+      @auth = Author::Proxy.new(client)
+      @result = @auth.register_and_login(email, password)
+    end
+
+    describe 'with valid credentials' do
+      let(:email) { valid_user[:email] }
+      let(:password) { valid_user[:password] }
+      it 'should return true' do
+        expect(@result).to be_true
+      end
+      context '.session' do
+        it { @auth.session.should_not be_nil }
+      end
+    end
+
+    describe 'with invalid credentials' do
+      let(:email) { 'xxx' }
+      let(:password) { 'xxx' }
+      it 'should return false' do
+        expect(@result).to be_false
+      end
+      context '.session' do
+        it { @auth.session.should be_nil }
+      end
+      context '.errors["email"]' do
+        it { @auth.errors['email'].should_not be_empty }
+      end
+      context '.errors["password"]' do
+        it { @auth.errors['password'].should_not be_empty }
+      end
+    end
+  end
+
   context ".login" do
     before :each do
       @auth = Author::Proxy.new(client)

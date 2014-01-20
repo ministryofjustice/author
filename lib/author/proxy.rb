@@ -15,15 +15,19 @@ module Author
       @response.code == 201 && @errors.empty?
     end
 
+    # TODO: error messaging
     def confirm_registration confirmation_token
-      @response = @client.confirm_registration(confirmation_token)
-      @response.code == 200
+      response = @client.confirm_registration(confirmation_token)
+      response.code == 204
     end
 
-    def register_and_login_without_confirmation_step(email, password)
-      register(email, password)
-      confirm_registration(@confirmation_token)
-      login(email, password)
+    def register_and_login(email, password)
+      if register(email, password)
+        if confirm_registration(@confirmation_token)
+          return login(email, password)
+        end
+      end
+      false
     end
 
     def login(email, password)
@@ -48,6 +52,7 @@ module Author
     def delete_instance_vars
       remove_instance_variable :@user_id if defined? @user_id
       remove_instance_variable :@session if defined? @session
+      remove_instance_variable :@confirmation_token if defined? @confirmation_token
     end
 
     def extract_user_details
