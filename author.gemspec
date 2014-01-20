@@ -3,7 +3,7 @@ require './lib/author.rb'
 
 Gem::Specification.new do |gem|
   gem.name          = "author"
-  gem.version       = 1.1
+  gem.version       = 1.2
   gem.authors       = ["Tom Gladhill"]
   gem.email         = ["whoojemaflip@gmail.com"]
   gem.description   = %q{Simple proxy class for devise authentication service.}

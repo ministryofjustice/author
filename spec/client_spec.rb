@@ -1,14 +1,13 @@
 require_relative '../lib/author.rb'
 
 require 'SecureRandom'
+require 'HTTParty'
 
-client = Author::Client.new('http://localhost:9292')
+client = Author::Client.new('http://localhost:3111')
 
 # TODO: mock service calls
-begin
-  client.verify('xxx')
-rescue Exception => e
-  puts "FAIL: expected to find authentication service on #{client}: #{e.to_s}"
+unless  client.verify('xxx')
+  puts "FAIL: expected to find authentication service on #{client}"
   exit(1)
 end
 

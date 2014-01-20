@@ -10,47 +10,38 @@ module Author
     end
 
     def register(email, password)
-      response = @client.register(email, password)
-      if response.code == 201
-        extract_confirmation_token response
-      else
-        handle_errors response
-      end
-      response.code == 201
+      @response = @client.register(email, password)
+      extract_confirmation_token
+      @response.code == 201 && @errors.empty?
     end
 
     def confirm_registration confirmation_token
-      @client.confirm_registration confirmation_token
+      @response = @client.confirm_registration(confirmation_token)
+      @response.code == 200
+    end
+
+    def register_and_login_without_confirmation_step(email, password)
+      register(email, password)
+      confirm_registration(@confirmation_token)
+      login(email, password)
     end
 
     def login(email, password)
-      response = @client.login(email, password)
-      if response.code == 201
-        extract_session_key response
-      else
-        handle_errors response
-      end
-      response.code == 201
+      @response = @client.login(email, password)
+      extract_session_key
+      @response.code == 201 && @errors.empty?
     end
 
     def verify(session_id)
-      response = @client.verify(session_id)
-      if response.code == 200
-        extract_user_details response
-      else
-        handle_errors response
-      end
-      response.code == 200
+      @response = @client.verify(session_id)
+      extract_user_details
+      @response.code == 200 && @errors.empty?
     end
 
     def logout(session_id)
-      response = @client.logout(session_id)
-      if response.code == 204
-        delete_instance_vars
-      else
-        handle_errors response
-      end
-      response.code == 204
+      @response = @client.logout(session_id)
+      delete_instance_vars
+      @response.code == 204 && @errors.empty?
     end
 
   private
@@ -59,38 +50,32 @@ module Author
       remove_instance_variable :@session if defined? @session
     end
 
-    def extract_user_details(response)
-      if (response.headers.to_s != '' && response.headers.has_key?('x-user-id'))
-        @user_id = response.headers['x-user-id']
-      else
-        raise UnexpectedAuthServerResponse, 'Missing User ID.'
+    def extract_user_details
+      @user_id = try(@response.headers, :[], 'x-user-id')
+      handle_errors if @user_id.nil?
+    end
+
+    def extract_session_key
+      @session = try(@response, :[], 'authentication_token')
+      handle_errors if @session.nil?
+    end
+
+    def extract_confirmation_token
+      @confirmation_token = try(@response, :[], 'confirmation_token')
+      handle_errors if @confirmation_token.nil?
+    end
+
+    def handle_errors
+      @errors = try(@response, :[], 'errors') || {}
+      if @errors == {}
+        @errors['messages'] = (try(@response, :[], 'error') || ['Unexpected response from server.'])
       end
     end
 
-    def extract_confirmation_token(response)
-      if (response.body.to_s != '' && response.has_key?('confirmation_token'))
-        @confirmation_token = response['confirmation_token']
-      else
-        raise UnexpectedAuthServerResponse, "Missing Confirmation Token."
-      end
-    end
-
-    def extract_session_key(response)
-      if (response.body.to_s != '' && response.has_key?('authentication_token'))
-        @session = response['authentication_token']
-      else
-        raise UnexpectedAuthServerResponse, "Missing Session Token."
-      end
-    end
-
-    def handle_errors(response)
-      if response.body.to_s != ''
-        if response.has_key?('errors')
-          @errors = response['errors']
-        elsif response.has_key?('error')
-          @errors['messages'] ||= []
-          @errors['messages'] << response['error']
-        end
+    # similer to http://api.rubyonrails.org/classes/Object.html#method-i-try
+    def try(object, *method, &args)
+      if !object.nil? && object.respond_to?(method.first)
+        object.public_send(*method, &args) 
       end
     end
   end
