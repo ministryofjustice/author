@@ -3,10 +3,13 @@ require_relative '../lib/author.rb'
 require 'SecureRandom'
 require 'HTTParty'
 
+# set this to any backend that implements x-moj-auth
 client = Author::Client.new('http://localhost:3111')
 
 # TODO: mock service calls
-unless  client.verify('xxx')
+begin
+  client.verify('xxx')
+rescue
   puts "FAIL: expected to find authentication service on #{client}"
   exit(1)
 end
