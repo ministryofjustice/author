@@ -1,8 +1,8 @@
 module Author
   module Controller
 
-    before_filter :set_signed_in
-    around_action :set_secure_token
+    before_filter :set_signed_in if respond_to? :before_filter
+    around_action :set_secure_token if respond_to? :set_secure_token
 
     def set_signed_in
       @signed_in = read_secure_token.present?
