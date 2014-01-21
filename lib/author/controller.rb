@@ -1,9 +1,6 @@
 module Author
   module Controller
 
-    before_filter :set_signed_in if respond_to? :before_filter
-    around_action :set_secure_token if respond_to? :set_secure_token
-
     def set_signed_in
       @signed_in = read_secure_token.present?
     end
@@ -26,6 +23,16 @@ module Author
           model_class.headers = model_class.headers.except(token_header)
         end
       end
+    end
+
+    def set_secure_token
+      eval(
+        (
+          api_models.map {|m| "with_secure_token(#{m}) do" } +
+          ["yield"] +
+          api_models.map {|m| "end" }
+        ).join("\n")
+      )
     end
 
   end
