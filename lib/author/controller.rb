@@ -58,6 +58,8 @@ module Author
   end
 end
 
+module ActiveResource; end
+
 class ActiveResource::Base
   class << self
     attr_writer :headers
