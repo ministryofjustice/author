@@ -5,13 +5,13 @@ module Author
   # require authentication checks and perform API communication via
   # ActiveResource models.
   #
-  # To include:
+  # To include in controller:
   #   include Author::Controller
   #
   module Controller
 
     def self.included controller
-      controller.around_action :set_secure_token
+      controller.around_action :set_secure_token_for_authenticated_api_calls
     end
 
     def signed_in?
@@ -24,18 +24,22 @@ module Author
 
     protected
 
-    def with_secure_token model_class
+    def set_secure_token_for_authenticated_api_calls model_classes=api_models
       token_header = RackMojAuth::Resources::SECURE_TOKEN.sub('HTTP_','')
 
       begin
         if token = read_secure_token
-          model_class.headers = model_class.headers.merge(token_header => token)
+          model_classes.each do |model_class|
+            model_class.headers = model_class.headers.merge(token_header => token)
+          end
         end
         yield
       ensure
         # ensure token always removed from headers
-        if model_class.headers[token_header]
-          model_class.headers = model_class.headers.except(token_header)
+        model_classes.each do |model_class|
+          if model_class.headers[token_header]
+            model_class.headers = model_class.headers.except(token_header)
+          end
         end
       end
     end
@@ -44,16 +48,6 @@ module Author
     # API communication.
     def api_models
       []
-    end
-
-    def set_secure_token
-      eval(
-        (
-          api_models.map {|m| "with_secure_token(#{m}) do" } +
-          ["yield"] +
-          api_models.map {|m| "end" }
-        ).join("\n")
-      )
     end
 
   end
