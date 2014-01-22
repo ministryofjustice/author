@@ -22,6 +22,10 @@ module Author
       session[:secret_token]
     end
 
+    def write_secure_token token
+      session[:secret_token] = token
+    end
+
     protected
 
     def set_secure_token_for_authenticated_api_calls model_classes=api_models
