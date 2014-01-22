@@ -51,7 +51,8 @@ module Author
     # Override as needed, return all ActiveResource models used for
     # API communication.
     def api_models
-      []
+      Rails.application.eager_load! unless Rails.configuration.cache_classes
+      ActiveResource::Base.descendants
     end
 
   end
