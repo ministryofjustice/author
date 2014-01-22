@@ -28,6 +28,13 @@ module Author
 
     protected
 
+    # Override as needed, return all ActiveResource models used for
+    # API communication.
+    def api_models
+      Rails.application.eager_load! unless Rails.configuration.cache_classes
+      ActiveResource::Base.descendants
+    end
+
     def set_secure_token_for_authenticated_api_calls model_classes=api_models
       token_header = RackMojAuth::Resources::SECURE_TOKEN.sub('HTTP_','')
 
@@ -46,13 +53,6 @@ module Author
           end
         end
       end
-    end
-
-    # Override as needed, return all ActiveResource models used for
-    # API communication.
-    def api_models
-      Rails.application.eager_load! unless Rails.configuration.cache_classes
-      ActiveResource::Base.descendants
     end
 
   end
