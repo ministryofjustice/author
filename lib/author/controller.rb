@@ -42,7 +42,7 @@ module Author
     end
 
     def set_secure_token_for_authenticated_api_calls model_classes=api_models
-      token_header = RackMojAuth::Resources::SECURE_TOKEN.sub('HTTP_','')
+      token_header = 'HTTP_SECURE_TOKEN'.sub('HTTP_','')
 
       begin
         if token = read_secure_token
