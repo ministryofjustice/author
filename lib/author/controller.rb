@@ -1,3 +1,9 @@
+begin
+  require 'rack_moj_auth'
+rescue Exception => e
+  puts e.to_s
+end
+
 module Author
 
   ##
