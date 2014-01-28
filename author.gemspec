@@ -17,5 +17,6 @@ Gem::Specification.new do |gem|
 
   gem.required_ruby_version = '>= 2.0.0'
   gem.add_dependency 'httparty', ">= 0.12.0"
+  gem.add_dependency 'rack_moj_auth', ">= 0.0.2"
   gem.add_development_dependency 'rspec', ">= 2.14.0"
 end
